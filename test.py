@@ -36,9 +36,9 @@ progress = tqdm(total=total)
 #         print(f"Failed: {entry.title}")
 
 #     progress.update(1)
+import random
 
-CHUNK_SIZE = 3
-chunk = []
+CHUNK_SIZE = random.choices([3, 4, 5, 6, 7], weights=[0.5, 0.2, 0.2, 0.05, 0.05])[0]chunk = []
 
 for entry in feed.entries:
     chunk.append(entry)
