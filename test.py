@@ -25,6 +25,7 @@ for entry in feed.entries:
                 "summary": entry.summary,
                 "description": entry.description,
                 "published": entry.published,
+                "dump": entry
             },
         },
         headers={"Content-Type": "application/json"},
