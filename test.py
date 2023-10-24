@@ -29,10 +29,11 @@ for entry in feed.entries:
         },
         headers={"Content-Type": "application/json"},
     )
-    if resp.status_code == 200:
-        print(f"Success: {entry.title}")
-    else:
-        print(f"Failed: {entry.title}")
+    print(resp.status_code, resp.text)
+    # if resp.status_code == 200:
+    #     print(f"Success: {entry.title}")
+    # else:
+    #     print(f"Failed: {entry.title}")
 
     progress.update(1)
 
