@@ -2,6 +2,7 @@ import os
 import feedparser
 import requests
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
 
 rss_url = os.environ.get(
     "RSS_URL",
@@ -12,29 +13,80 @@ feed = feedparser.parse(rss_url)
 total = len(feed.entries)
 tqdm.write(f"Total: {total}")
 progress = tqdm(total=total)
+# for entry in feed.entries:
+#     resp = requests.post(
+#         "https://script.google.com/macros/s/AKfycbx7CzrFXxwG2iQ8xp8qpsOo6d4xRhjN87dg_BSmqa-g2UIQN6ctp-MJbwVCP-fjlgYw/exec",
+#         json={
+#             "method": "POST",
+#             "sheet": "Sheet1",
+#             "key": "Astrongpassword@123!!",
+#             "payload": {
+#                 "title": entry.title,
+#                 "link": entry.link,
+#                 "summary": entry.summary,
+#                 "description": entry.description,
+#                 "published": entry.published,
+#             },
+#         },
+#         headers={"Content-Type": "application/json"},
+#     )
+#     if resp.status_code == 200:
+#         print(f"Success: {entry.title}")
+#     else:
+#         print(f"Failed: {entry.title}")
+
+#     progress.update(1)
+
+CHUNK_SIZE = 3
+chunk = []
+
 for entry in feed.entries:
-    resp = requests.post(
-        "https://script.google.com/macros/s/AKfycbx7CzrFXxwG2iQ8xp8qpsOo6d4xRhjN87dg_BSmqa-g2UIQN6ctp-MJbwVCP-fjlgYw/exec",
-        json={
-            "method": "POST",
-            "sheet": "Sheet1",
-            "key": "Astrongpassword@123!!",
-            "payload": {
-                "title": entry.title,
-                "link": entry.link,
-                "summary": entry.summary,
-                "description": entry.description,
-                "published": entry.published,
-                "dump": entry
-            },
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    print(resp.status_code, resp.text)
-    # if resp.status_code == 200:
-    #     print(f"Success: {entry.title}")
-    # else:
-    #     print(f"Failed: {entry.title}")
+    chunk.append(entry)
 
-    progress.update(1)
+    if len(chunk) == CHUNK_SIZE:
+        with ThreadPoolExecutor(max_workers=CHUNK_SIZE) as executor:
+            for entry in chunk:
+                executor.submit(
+                    requests.post,
+                    "https://script.google.com/macros/s/AKfycbx7CzrFXxwG2iQ8xp8qpsOo6d4xRhjN87dg_BSmqa-g2UIQN6ctp-MJbwVCP-fjlgYw/exec",
+                    json={
+                        "method": "POST",
+                        "sheet": "Sheet1",
+                        "key": "Astrongpassword@123!!",
+                        "payload": {
+                            "title": entry.title,
+                            "link": entry.link,
+                            "summary": entry.summary,
+                            "description": entry.description,
+                            "published": entry.published,
+                        },
+                    },
+                    headers={"Content-Type": "application/json"},
+                )
+                progress.update(1)
+        chunk = []
 
+if chunk:
+    with ThreadPoolExecutor(max_workers=len(chunk)) as executor:
+        for entry in chunk:
+            executor.submit(
+                requests.post,
+                "https://script.google.com/macros/s/AKfycbx7CzrFXxwG2iQ8xp8qpsOo6d4xRhjN87dg_BSmqa-g2UIQN6ctp-MJbwVCP-fjlgYw/exec",
+                json={
+                    "method": "POST",
+                    "sheet": "Sheet1",
+                    "key": "Astrongpassword@123!!",
+                    "payload": {
+                        "title": entry.title,
+                        "link": entry.link,
+                        "summary": entry.summary,
+                        "description": entry.description,
+                        "published": entry.published,
+                    },
+                },
+                headers={"Content-Type": "application/json"},
+            )
+            progress.update(1)
+    chunk = []
+
+progress.close()
