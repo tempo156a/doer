@@ -96,11 +96,16 @@ from threading import Thread
 
 Thread(target=run).start()
 
-while True:
-    _start = time.time()
-    do_one_round()
-    _end = time.time()
-    if _end - _start < 120:
-        dur = 120 - (_end - _start)
-        print(f"Sleeping for {dur} seconds")
-        time.sleep(dur)
+def start_loop():
+  while True:
+      _start = time.time()
+      do_one_round()
+      _end = time.time()
+      if _end - _start < 200:
+          dur = 200 - (_end - _start)
+          print(f"Sleeping for {dur} seconds")
+          time.sleep(dur)
+
+import sys
+if sys.argv[-1] == "loop":
+    start_loop()
